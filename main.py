@@ -1,12 +1,13 @@
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import openai
+import os
 
 # Инициализация OpenAI с вашим ключом
-openai.api_key = ''
+openai.api_key = os.getenv('OPENAI_TOKEN')
 
 # Инициализация бота Telegram
-updater = Updater(token='', use_context=True)
+updater = Updater(token=os.getenv('BOT_TOKEN'), use_context=True)
 
 dispatcher = updater.dispatcher
 
