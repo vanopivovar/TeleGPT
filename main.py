@@ -6,6 +6,7 @@ import os
 # Инициализация OpenAI с вашим ключом
 openai.api_key = os.getenv('OPENAI_TOKEN')
 
+
 # Инициализация бота Telegram
 updater = Updater(token=os.getenv('BOT_TOKEN'), use_context=True)
 
