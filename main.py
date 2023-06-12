@@ -42,5 +42,5 @@ PORT = int(os.environ.get('PORT', 5000))
 updater.start_webhook(listen="0.0.0.0",
                       port=int(PORT),
                       url_path=os.getenv('BOT_TOKEN'))
-updater.bot.set_webhook("https://yourherokuappname.herokuapp.com/" + os.getenv('BOT_TOKEN'))
+updater.bot.set_webhook("https://pivovar-gpt-bot.herokuapp.com/" + os.getenv('BOT_TOKEN'))
 updater.idle()
