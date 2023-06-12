@@ -6,7 +6,6 @@ import os
 # Инициализация OpenAI с вашим ключом
 openai.api_key = os.getenv('OPENAI_TOKEN')
 
-
 # Инициализация бота Telegram
 updater = Updater(token=os.getenv('BOT_TOKEN'), use_context=True)
 
@@ -38,7 +37,10 @@ def echo(update: Update, context: CallbackContext) -> None:
 echo_handler = MessageHandler(Filters.text & ~Filters.command, echo)
 dispatcher.add_handler(echo_handler)
 
-# Запуск бота
-updater.start_polling()
-
+# Запуск бота с использованием вебхука
+PORT = int(os.environ.get('PORT', 5000))
+updater.start_webhook(listen="0.0.0.0",
+                      port=int(PORT),
+                      url_path=os.getenv('BOT_TOKEN'))
+updater.bot.set_webhook("https://yourherokuappname.herokuapp.com/" + os.getenv('BOT_TOKEN'))
 updater.idle()
