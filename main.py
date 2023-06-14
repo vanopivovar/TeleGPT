@@ -15,7 +15,7 @@ dispatcher = updater.dispatcher
 def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     update.message.reply_markdown_v2(
-        fr'Hi {user.mention_markdown_v2()}, you use ChatGPT 3.5 model! Please, ask me\!',
+        fr'Hi {user.mention_markdown_v2()}, you use ChatGPT 4 model! Please, ask me\!',
         reply_markup=ForceReply(selective=True),
     )
 
