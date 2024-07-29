@@ -26,7 +26,7 @@ dispatcher.add_handler(start_handler)
 def echo(update: Update, context: CallbackContext) -> None:
     text = update.message.text
     response = openai.ChatCompletion.create(
-      model="gpt-4-0613",
+      model="gpt-4o",
       messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": text},
