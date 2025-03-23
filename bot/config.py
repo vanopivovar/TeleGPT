@@ -2,8 +2,8 @@ import os
 
 # Базовые настройки
 PORT = int(os.getenv("PORT", 5000))
-WEBHOOK_URL = os.getenv("APP_LINK") + os.getenv("BOT_TOKEN") if os.getenv("APP_LINK") else None
-
+# WEBHOOK_URL = os.getenv("APP_LINK") + os.getenv("BOT_TOKEN") if os.getenv("APP_LINK") else None
+WEBHOOK_URL = os.getenv("APP_LINK")  # Просто используйте URL приложения без добавления токена
 # Настройки OpenAI
 DEFAULT_MODEL = "gpt-4o"
 AVAILABLE_MODELS = {
