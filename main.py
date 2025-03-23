@@ -1,10 +1,10 @@
 import os
 import logging
 from dotenv import load_dotenv
-from telegram import Update, ForceReply
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-from bot.handlers import start_handler, help_handler, reset_handler, model_handler, message_handler
+from bot.handlers import start_handler, help_handler, reset_handler, model_handler, message_handler, model_callback_handler
 from bot.config import WEBHOOK_URL, PORT
 
 # Загружаем переменные окружения из файла .env
@@ -26,6 +26,9 @@ def main() -> None:
     application.add_handler(CommandHandler("help", help_handler))
     application.add_handler(CommandHandler("reset", reset_handler))
     application.add_handler(CommandHandler("model", model_handler))
+    
+    # Обработчик для кнопок выбора модели
+    application.add_handler(CallbackQueryHandler(model_callback_handler, pattern="^model:"))
     
     # Регистрируем обработчик текстовых сообщений
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))

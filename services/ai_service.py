@@ -1,10 +1,17 @@
 import logging
 from typing import List, Dict, Optional
-from bot.config import MODEL_PROVIDERS
 from services import openai_service, anthropic_service
 
 # Настройка логирования
 logger = logging.getLogger(__name__)
+
+# Определение провайдеров напрямую
+MODEL_PROVIDERS = {
+    "gpt-4o": "openai",
+    "gpt-3.5-turbo": "openai",
+    "claude-3-5-sonnet": "anthropic",
+    "claude-3-7-sonnet": "anthropic",
+}
 
 async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional[str]:
     """
