@@ -23,12 +23,21 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
     
     Args:
         messages: Список сообщений для API
-        model: Название модели для использования
+        model: Название модели для использования (полное имя)
     
     Returns:
         Ответ от модели или None в случае ошибки
     """
     global last_request_time
+    
+    # Логируем ключевую информацию
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        logger.error("ANTHROPIC_API_KEY не настроен в переменных окружения")
+        return "Ошибка: API ключ для Anthropic не настроен. Пожалуйста, обратитесь к администратору."
+    
+    logger.info(f"Используем модель Anthropic: {model}")
+    logger.info(f"API ключ настроен: {api_key[:4]}...{api_key[-4:]}")
     
     try:
         # Преобразуем формат сообщений из telegram-openai в формат Anthropic
@@ -43,7 +52,7 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
         
         # Если системного сообщения нет, используем значение по умолчанию
         if not system_content:
-            system_content = SYSTEM_MESSAGES.get(model, SYSTEM_MESSAGES["claude-3-5-sonnet"])
+            system_content = SYSTEM_MESSAGES.get(model, "Вы - полезный и дружелюбный ассистент Claude.")
         
         # Добавляем остальные сообщения
         for msg in messages:
@@ -66,6 +75,9 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
         # Обновляем время последнего запроса
         last_request_time = time.time()
         
+        # Логируем отправляемые данные
+        logger.info(f"Отправляем в Anthropic API: система={system_content[:50]}..., сообщения={len(anthropic_messages)}")
+        
         # Вызываем API Anthropic
         response = client.messages.create(
             model=model,
@@ -83,6 +95,13 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
         last_request_time = time.time()
         return "Извините, превышен лимит запросов к API. Пожалуйста, попробуйте позже."
     
+    except anthropic.APIError as e:
+        logger.error(f"Anthropic API error: {str(e)}")
+        # Подробно логируем ошибку
+        error_details = f"Status: {e.status_code}, Type: {e.error_type}, Message: {e.message}"
+        logger.error(error_details)
+        return f"Ошибка в Anthropic API: {error_details}. Пожалуйста, попробуйте другую модель."
+    
     except anthropic.APIConnectionError:
         logger.error("Failed to connect to Anthropic API")
         return "Извините, не удалось соединиться с сервером. Пожалуйста, попробуйте позже."
@@ -93,4 +112,4 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
     
     except Exception as e:
         logger.error(f"Error in Anthropic API request: {str(e)}")
-        return "Произошла ошибка при обработке запроса. Пожалуйста, попробуйте позже."
+        return f"Произошла ошибка при обработке запроса: {str(e)}. Пожалуйста, попробуйте позже."

@@ -13,6 +13,12 @@ MODEL_PROVIDERS = {
     "claude-3-7-sonnet": "anthropic",
 }
 
+# Маппинг для полных имен моделей Anthropic
+ANTHROPIC_MODEL_NAMES = {
+    "claude-3-5-sonnet": "claude-3-5-sonnet-20240307",
+    "claude-3-7-sonnet": "claude-3-7-sonnet-20240229"
+}
+
 async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional[str]:
     """
     Маршрутизатор для выбора соответствующего API сервиса в зависимости от модели.
@@ -32,7 +38,10 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
     if provider == "openai":
         return await openai_service.get_completion(messages, model)
     elif provider == "anthropic":
-        return await anthropic_service.get_completion(messages, model)
+        # Используем полное имя модели для Anthropic
+        full_model_name = ANTHROPIC_MODEL_NAMES.get(model, model)
+        logger.info(f"Полное имя модели Anthropic: {full_model_name}")
+        return await anthropic_service.get_completion(messages, full_model_name)
     else:
         logger.error(f"Неизвестный провайдер для модели {model}")
         return "Извините, указанная модель не поддерживается. Пожалуйста, выберите другую модель с помощью команды /model."
