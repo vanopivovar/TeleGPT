@@ -3,12 +3,10 @@ import logging
 import time
 import random
 import asyncio
+import json
 from typing import List, Dict, Optional
 import anthropic
 from bot.config import MAX_TOKENS, SYSTEM_MESSAGES
-
-# Инициализируем клиент Anthropic
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 # Настройка логирования
 logger = logging.getLogger(__name__)
@@ -34,12 +32,15 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         logger.error("ANTHROPIC_API_KEY не настроен в переменных окружения")
-        return "Ошибка: API ключ для Anthropic не настроен. Пожалуйста, обратитесь к администратору."
+        return "Ошибка: API ключ для Anthropic не настроен. Пожалуйста, выберите модель OpenAI."
     
     logger.info(f"Используем модель Anthropic: {model}")
-    logger.info(f"API ключ настроен: {api_key[:4]}...{api_key[-4:]}")
     
     try:
+        # Проверяем, создан ли клиент Anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+        logger.info("Клиент Anthropic создан успешно")
+        
         # Преобразуем формат сообщений из telegram-openai в формат Anthropic
         system_content = ""
         anthropic_messages = []
@@ -76,7 +77,28 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
         last_request_time = time.time()
         
         # Логируем отправляемые данные
-        logger.info(f"Отправляем в Anthropic API: система={system_content[:50]}..., сообщения={len(anthropic_messages)}")
+        logger.info(f"Отправляем в Anthropic API: модель={model}, сообщения={len(anthropic_messages)}")
+        
+        # Проверяем доступные модели
+        available_models = [
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307",
+            "claude-3-5-sonnet-20240620",
+            "claude-3-7-sonnet-20240307",
+            "claude-instant-1.2",
+            "claude-2.0",
+            "claude-2.1"
+        ]
+        logger.info(f"Попытка использовать библиотеку anthropic с моделью {model}. Доступные модели: {available_models}")
+        
+        # Пробуем использовать последние версии моделей
+        if model == "claude-3-5-sonnet":
+            model = "claude-3-5-sonnet-20240620"
+        elif model == "claude-3-7-sonnet":
+            model = "claude-3-7-sonnet-20240307"
+        
+        logger.info(f"Используем актуальную модель: {model}")
         
         # Вызываем API Anthropic
         response = client.messages.create(
@@ -89,6 +111,10 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
         # Возвращаем ответ
         return response.content[0].text
     
+    except anthropic.NotFoundError as e:
+        logger.error(f"Модель не найдена: {str(e)}")
+        return f"Модель {model} не найдена. Пожалуйста, выберите другую модель с помощью команды /model."
+    
     except anthropic.RateLimitError:
         logger.warning("Anthropic API rate limit exceeded")
         # Увеличиваем интервал при превышении лимита
@@ -97,10 +123,7 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
     
     except anthropic.APIError as e:
         logger.error(f"Anthropic API error: {str(e)}")
-        # Подробно логируем ошибку
-        error_details = f"Status: {e.status_code}, Type: {e.error_type}, Message: {e.message}"
-        logger.error(error_details)
-        return f"Ошибка в Anthropic API: {error_details}. Пожалуйста, попробуйте другую модель."
+        return f"Ошибка в Anthropic API: {str(e)}. Пожалуйста, попробуйте другую модель."
     
     except anthropic.APIConnectionError:
         logger.error("Failed to connect to Anthropic API")
@@ -110,6 +133,10 @@ async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional
         logger.error("Anthropic API request timed out")
         return "Извините, запрос к серверу превысил время ожидания. Пожалуйста, попробуйте позже."
     
+    except AttributeError as e:
+        logger.error(f"AttributeError: {str(e)}")
+        return f"Ошибка атрибута при работе с Anthropic API: {str(e)}. Попробуйте другую модель."
+    
     except Exception as e:
-        logger.error(f"Error in Anthropic API request: {str(e)}")
-        return f"Произошла ошибка при обработке запроса: {str(e)}. Пожалуйста, попробуйте позже."
+        logger.error(f"Error in Anthropic API request: {str(e)}", exc_info=True)
+        return f"Произошла ошибка при обработке запроса: {str(e)}. Пожалуйста, попробуйте использовать модель OpenAI."

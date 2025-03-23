@@ -14,9 +14,10 @@ MODEL_PROVIDERS = {
 }
 
 # Маппинг для полных имен моделей Anthropic
+# Использование текущих моделей без дат в именах
 ANTHROPIC_MODEL_NAMES = {
-    "claude-3-5-sonnet": "claude-3-5-sonnet-20240307",
-    "claude-3-7-sonnet": "claude-3-7-sonnet-20240229"
+    "claude-3-5-sonnet": "claude-3-5-sonnet",
+    "claude-3-7-sonnet": "claude-3-7-sonnet"
 }
 
 async def get_completion(messages: List[Dict[str, str]], model: str) -> Optional[str]:

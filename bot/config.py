@@ -13,14 +13,6 @@ AVAILABLE_MODELS = {
     "claude37": "claude-3-7-sonnet",
 }
 
-# Определяем, какие модели к какому провайдеру относятся
-MODEL_PROVIDERS = {
-    "gpt-4o": "openai",
-    "gpt-3.5-turbo": "openai",
-    "claude-3-5-sonnet": "anthropic",
-    "claude-3-7-sonnet": "anthropic",
-}
-
 # Лимиты и настройки контекста
 MAX_HISTORY_LENGTH = 10  # Максимальное количество сообщений в истории
 MAX_TOKENS = 1000  # Максимальное количество токенов на ответ
