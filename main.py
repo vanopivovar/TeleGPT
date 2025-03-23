@@ -1,46 +1,46 @@
-from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-import openai
 import os
+import logging
+from dotenv import load_dotenv
+from telegram import Update, ForceReply
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-# Инициализация OpenAI с вашим ключом
-openai.api_key = os.getenv('OPENAI_TOKEN')
+from bot.handlers import start_handler, help_handler, reset_handler, model_handler, message_handler
+from bot.config import WEBHOOK_URL, PORT
 
-# Инициализация бота Telegram
-updater = Updater(token=os.getenv('BOT_TOKEN'), use_context=True)
+# Загружаем переменные окружения из файла .env
+load_dotenv()
 
-dispatcher = updater.dispatcher
+# Настройка логирования
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-# Функция для обработки команд
-def start(update: Update, context: CallbackContext) -> None:
-    user = update.effective_user
-    update.message.reply_markdown_v2(
-        fr'Hi {user.mention_markdown_v2()}, you use ChatGPT 4 model! Please, ask me\!',
-        reply_markup=ForceReply(selective=True),
-    )
+def main() -> None:
+    """Запуск бота."""
+    # Создаем экземпляр приложения бота
+    application = Application.builder().token(os.getenv("BOT_TOKEN")).build()
 
-start_handler = CommandHandler('start', start)
-dispatcher.add_handler(start_handler)
+    # Регистрируем обработчики команд
+    application.add_handler(CommandHandler("start", start_handler))
+    application.add_handler(CommandHandler("help", help_handler))
+    application.add_handler(CommandHandler("reset", reset_handler))
+    application.add_handler(CommandHandler("model", model_handler))
+    
+    # Регистрируем обработчик текстовых сообщений
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-# Функция для обработки текстовых сообщений
-def echo(update: Update, context: CallbackContext) -> None:
-    text = update.message.text
-    response = openai.ChatCompletion.create(
-      model="gpt-4o",
-      messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": text},
-        ]
-    )
-    update.message.reply_text(response['choices'][0]['message']['content'])
+    # Настройка webhook или polling в зависимости от окружения
+    if os.getenv("ENVIRONMENT") == "production":
+        # Используем webhook для production
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            webhook_url=WEBHOOK_URL,
+        )
+    else:
+        # Используем polling для разработки
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-echo_handler = MessageHandler(Filters.text & ~Filters.command, echo)
-dispatcher.add_handler(echo_handler)
-
-# Запуск бота с использованием вебхука
-PORT = int(os.environ.get('PORT', 5000))
-updater.start_webhook(listen="0.0.0.0",
-                      port=int(PORT),
-                      url_path=os.getenv('BOT_TOKEN'))
-updater.bot.set_webhook(os.getenv('APP_LINK') + os.getenv('BOT_TOKEN'))
-updater.idle()
+if __name__ == "__main__":
+    main()
