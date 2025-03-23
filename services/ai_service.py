@@ -5,7 +5,7 @@ from services import openai_service, anthropic_service
 # Настройка логирования
 logger = logging.getLogger(__name__)
 
-# Определение провайдеров напрямую
+# Определение провайдеров напрямую в этом файле
 MODEL_PROVIDERS = {
     "gpt-4o": "openai",
     "gpt-3.5-turbo": "openai",
